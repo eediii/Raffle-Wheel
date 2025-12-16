@@ -2,8 +2,6 @@
 
 An interactive, real-time raffle application designed for events, classrooms, and presentations. Participants scan a QR code with their mobile phones to join the list instantly. The host spins the wheel on the main screen to pick a winner!
 
-![Wheel Preview](https://via.placeholder.com/800x400?text=Interactive+Raffle+Wheel+Preview)
-
 ## 🌟 Features
 
 * **Real-Time Connection:** Names appear on the host screen instantly as users join (powered by Socket.io).
@@ -23,8 +21,8 @@ Since this repository does not include heavy dependency files, you need to insta
 
 1.  **Clone or Download the Repository**
     ```bash
-    git clone [https://github.com/YOUR_USERNAME/YOUR_PROJECT_NAME.git](https://github.com/YOUR_USERNAME/YOUR_PROJECT_NAME.git)
-    cd YOUR_PROJECT_NAME
+    git clone https://github.com/eediii/Raffle-Wheel.git
+    cd Raffle-Wheel
     ```
 
 2.  **Install Dependencies (Crucial Step)**
@@ -71,4 +69,4 @@ To allow participants to join from different networks (e.g., 4G/LTE or School Wi
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
-Made with ❤️ by [Your Name]
+Made with ❤️ by eediii
