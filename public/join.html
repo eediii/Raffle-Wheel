@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>İsim Gönder</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f4f4f9; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; text-align: center; }
+        .card { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); width: 80%; max-width: 400px; }
+        h2 { margin-top: 0; color: #333; }
+        input { width: 90%; padding: 15px; margin: 15px 0; border: 2px solid #ddd; border-radius: 10px; font-size: 18px; outline: none; transition: 0.3s; }
+        input:focus { border-color: #4CAF50; }
+        button { width: 100%; padding: 15px; background: #4CAF50; color: white; border: none; border-radius: 10px; font-size: 18px; font-weight: bold; cursor: pointer; }
+        button:active { transform: scale(0.98); }
+        .success { display: none; }
+        .checkmark { font-size: 50px; color: #4CAF50; }
+    </style>
+</head>
+<body>
+
+    <div class="card" id="inputArea">
+        <h2>Çekilişe Katıl 🎉</h2>
+        <p>İsmini ve Soyismini yaz:</p>
+        <input type="text" id="fullname" placeholder="Ad Soyad" autocomplete="off">
+        <button onclick="send()">Gönder Gelsin</button>
+    </div>
+
+    <div class="card success" id="successArea">
+        <div class="checkmark">✔</div>
+        <h3>Harika!</h3>
+        <p>İsmin ekrana gönderildi.</p>
+        <p>Gözün büyük ekranda olsun.</p>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+
+        function send() {
+            const name = document.getElementById('fullname').value;
+            
+            if (name.trim() === "") {
+                alert("İsim yazmadın kanka!");
+                return;
+            }
+
+            // Sunucuya ismi gönder
+            socket.emit('newParticipant', name);
+
+            // Ekranı değiştir
+            document.getElementById('inputArea').style.display = 'none';
+            document.getElementById('successArea').style.display = 'block';
+        }
+    </script>
+</body>
+</html>

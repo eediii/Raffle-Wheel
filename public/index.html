@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>Çekiliş Ekranı</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; text-align: center; background: #222; color: #fff; margin: 0; padding: 20px; }
+        .hidden { display: none !important; }
+        
+        /* QR Ekranı Stilleri */
+        #setupPhase { margin-top: 50px; }
+        #qrImage { border: 15px solid white; border-radius: 20px; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
+        #nameList { margin-top: 30px; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; max-width: 800px; margin-left: auto; margin-right: auto; }
+        .participant { background: #ff9800; color: white; padding: 10px 20px; border-radius: 50px; font-weight: bold; animation: pop 0.3s ease; }
+        
+        /* Çarkıfelek Stilleri (YENİLENDİ) */
+        #wheelPhase { position: relative; height: 90vh; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        #wheelContainer { 
+            width: 500px; 
+            height: 500px; 
+            border-radius: 50%; 
+            border: 10px solid #fff; 
+            position: relative; 
+            box-shadow: 0 0 50px rgba(0,0,0,0.5);
+            /* Dönme efekti için */
+            transition: transform 5s cubic-bezier(0.25, 0.1, 0.25, 1); 
+        }
+        
+        #pointer { width: 0; height: 0; border-left: 25px solid transparent; border-right: 25px solid transparent; border-top: 50px solid red; z-index: 10; margin-bottom: -20px; filter: drop-shadow(0 5px 5px rgba(0,0,0,0.5)); }
+        
+        button { background: #4CAF50; color: white; border: none; padding: 15px 40px; font-size: 24px; border-radius: 10px; cursor: pointer; margin-top: 30px; box-shadow: 0 5px #2e7d32; transition: all 0.1s; }
+        button:active { transform: translateY(5px); box-shadow: 0 0 #2e7d32; }
+
+        @keyframes pop { 0% { transform: scale(0); } 80% { transform: scale(1.2); } 100% { transform: scale(1); } }
+    </style>
+</head>
+<body>
+
+    <div id="setupPhase">
+        <h1 style="font-size: 3em; margin-bottom: 10px;">Çekilişe Katıl!</h1>
+        <p style="font-size: 1.5em; color: #ccc;">Telefonunla okut, ismini yaz.</p>
+        
+        <img id="qrImage" src="" width="300" height="300">
+        
+        <div id="participantCount" style="margin-top: 20px; font-size: 1.2em;">Katılımcı Sayısı: 0</div>
+        <div id="nameList"></div>
+        
+        <br><br>
+        <button onclick="startWheel()">Çarkıfeleği Başlat ➤</button>
+    </div>
+
+    <div id="wheelPhase" class="hidden">
+        <div id="pointer"></div>
+        <div id="wheelContainer"></div>
+        <button onclick="spin()" id="spinBtn">ÇEVİR!</button>
+        <h1 id="winner" style="font-size: 4em; color: #ffeb3b; text-shadow: 0 0 20px red; display: none;"></h1>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        let participants = [];
+        const wheel = document.getElementById('wheelContainer');
+
+        // 1. QR Kodu Otomatik Ayarla
+        const currentURL = window.location.origin; 
+        document.getElementById('qrImage').src = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${currentURL}/join.html`;
+
+        // 2. İsimleri Al ve Listele
+        socket.on('updateList', (list) => {
+            participants = list;
+            document.getElementById('participantCount').innerText = `Katılımcı Sayısı: ${list.length}`;
+            
+            const listDiv = document.getElementById('nameList');
+            listDiv.innerHTML = "";
+            list.forEach(name => {
+                const tag = document.createElement('div');
+                tag.className = 'participant';
+                tag.innerText = name;
+                listDiv.appendChild(tag);
+            });
+        });
+
+        // 3. Çarkıfelek Moduna Geç
+        function startWheel() {
+            if (participants.length < 2) { alert("En az 2 kişi lazım kanka!"); return; }
+            document.getElementById('setupPhase').classList.add('hidden');
+            document.getElementById('wheelPhase').classList.remove('hidden');
+            drawWheel();
+        }
+
+        // 4. Çarkıfeleği Çiz (YENİ YÖNTEM: Conic Gradient)
+        function drawWheel() {
+            const count = participants.length;
+            const slicePercentage = 100 / count;
+            let gradientString = "";
+
+            participants.forEach((_, i) => {
+                // Farklı renkler üret
+                const color = `hsl(${i * (360 / count)}, 80%, 55%)`;
+                const start = i * slicePercentage;
+                const end = (i + 1) * slicePercentage;
+                // Renk geçişi stringini oluştur: "renk baslangic% bitis%,"
+                gradientString += `${color} ${start}% ${end}%,`;
+            });
+
+            // Sondaki fazladan virgülü sil
+            gradientString = gradientString.slice(0, -1);
+
+            // Çarkın arka planını ayarla
+            wheel.style.background = `conic-gradient(${gradientString})`;
+        }
+
+        // 5. Çevir
+        function spin() {
+            const winnerIndex = Math.floor(Math.random() * participants.length);
+            const sliceDeg = 360 / participants.length;
+            
+            // En az 5 tam tur (1800 derece) + Kazananın açısı
+            // Çarkın tepesi 0 derece kabul edilirse, kazananın oraya gelmesi için ters hesap:
+            const stopAngle = 1800 + (360 - (winnerIndex * sliceDeg) - (sliceDeg / 2)); // Tam ortasına denk gelsin diye sliceDeg/2 çıkardık
+            
+            wheel.style.transform = `rotate(${stopAngle}deg)`;
+            document.getElementById('spinBtn').disabled = true;
+
+            setTimeout(() => {
+                document.getElementById('winner').style.display = 'block';
+                document.getElementById('winner').innerText = "KAZANAN:\n" + participants[winnerIndex];
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

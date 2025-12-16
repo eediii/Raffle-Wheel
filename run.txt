@@ -1,0 +1,2 @@
+node server.js
+cloudflare.exe tunnel --url http://localhost:3000
